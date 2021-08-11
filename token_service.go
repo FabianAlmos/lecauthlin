@@ -24,11 +24,9 @@ func GenerateToken(userID, lifetimeMinutes int, secret string) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
-func ValidateBearerToken(authHeader string) (*JwtCustomClaims, error) {
-	tokenString := BearerAuthHeader(authHeader)
-
+func ValidateToken(tokenString, secret string) (*JwtCustomClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JwtCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(accessSecret), nil
+		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, err
@@ -42,12 +40,12 @@ func ValidateBearerToken(authHeader string) (*JwtCustomClaims, error) {
 	return claims, nil
 }
 
-func BearerAuthHeader(authHeader string) string {
-	if authHeader == "" {
+func GetTokenFromBearerString(bearerString string) string {
+	if bearerString == "" {
 		return ""
 	}
 
-	parts := strings.Split(authHeader, "Bearer")
+	parts := strings.Split(bearerString, "Bearer")
 	if len(parts) != 2 {
 		return ""
 	}

@@ -10,15 +10,16 @@ import (
 const (
 	httpPort = ":8080"
 
-	accessSecret = "access_secret_string"
+	accessSecret  = "access_secret_string"
 	refreshSecret = "refresh_secret_string"
 
-	accessLifetimeMinutes = 5
+	accessLifetimeMinutes  = 5
 	refreshLifetimeMinutes = 60
 )
 
 func main() {
 	http.HandleFunc("/login", Login)
+	//http.HandleFunc("/refresh", Refresh)
 	http.HandleFunc("/profile", GetProfile)
 
 	log.Fatal(http.ListenAndServe(httpPort, nil))
@@ -71,7 +72,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func GetProfile(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		claims, err := ValidateBearerToken(r.Header.Get("Authorization"))
+		claims, err := ValidateToken(GetTokenFromBearerString(r.Header.Get("Authorization")), refreshSecret)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
