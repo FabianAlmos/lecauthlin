@@ -1,22 +1,22 @@
-package main
+package server
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"strings"
 	"time"
 )
 
 type JwtCustomClaims struct {
 	ID int `json:"id"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func GenerateToken(userID, lifetimeMinutes int, secret string) (string, error) {
 	claims := &JwtCustomClaims{
 		userID,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * time.Duration(lifetimeMinutes)).Unix(),
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * time.Duration(lifetimeMinutes))),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

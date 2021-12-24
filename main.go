@@ -1,6 +1,7 @@
 package main
 
 import (
+	"auth/server"
 	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -8,7 +9,7 @@ import (
 )
 
 const (
-	httpPort = ":8080"
+	httpPort = ":8081"
 
 	accessSecret  = "access_secret_string"
 	refreshSecret = "refresh_secret_string"
@@ -28,13 +29,13 @@ func main() {
 func Login(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
-		req := new(LoginRequest)
+		req := new(server.LoginRequest)
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		user, err := NewUserRepository().GetUserByEmail(req.Email)
+		user, err := server.NewUserRepository().GetUserByEmail(req.Email)
 		if err != nil {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
@@ -45,19 +46,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		accessString, err := GenerateToken(user.ID, accessLifetimeMinutes, accessSecret)
+		accessString, err := server.GenerateToken(user.ID, accessLifetimeMinutes, accessSecret)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		refreshString, err := GenerateToken(user.ID, refreshLifetimeMinutes, refreshSecret)
+		refreshString, err := server.GenerateToken(user.ID, refreshLifetimeMinutes, refreshSecret)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		resp := LoginResponse{
+		resp := server.LoginResponse{
 			AccessToken:  accessString,
 			RefreshToken: refreshString,
 		}
@@ -72,19 +73,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func GetProfile(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		claims, err := ValidateToken(GetTokenFromBearerString(r.Header.Get("Authorization")), refreshSecret)
+		claims, err := server.ValidateToken(server.GetTokenFromBearerString(r.Header.Get("Authorization")), accessSecret)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		user, err := NewUserRepository().GetUserByID(claims.ID)
+		user, err := server.NewUserRepository().GetUserByID(claims.ID)
 		if err != nil {
 			http.Error(w, "User does not exist", http.StatusBadRequest)
 			return
 		}
 
-		resp := UserResponse{
+		resp := server.UserResponse{
 			ID:    user.ID,
 			Name:  user.Name,
 			Email: user.Email,

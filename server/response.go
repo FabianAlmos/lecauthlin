@@ -1,4 +1,4 @@
-package main
+package server
 
 type LoginResponse struct {
 	AccessToken  string `json:"access_token"`

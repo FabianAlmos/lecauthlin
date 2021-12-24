@@ -1,4 +1,4 @@
-package main
+package server
 
 type User struct {
 	ID       int
