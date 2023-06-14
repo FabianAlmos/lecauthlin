@@ -1,11 +1,12 @@
 package main
 
 import (
+	"auth/config"
 	"auth/server"
 )
 
 func main() {
-	cfg := server.NewConfig()
+	cfg := config.NewConfig()
 
 	server.Start(cfg)
 }
