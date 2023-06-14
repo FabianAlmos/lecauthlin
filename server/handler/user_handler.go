@@ -22,7 +22,8 @@ func NewUserHandler(cfg *config.Config) *UserHandler {
 func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		claims, err := service.ValidateToken(service.GetTokenFromBearerString(r.Header.Get("Authorization")), h.cfg.AccessSecret)
+		tokenService := service.NewTokenService(h.cfg)
+		claims, err := tokenService.ValidateAccessToken(tokenService.GetTokenFromBearerString(r.Header.Get("Authorization")))
 		if err != nil {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return

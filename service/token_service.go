@@ -1,6 +1,7 @@
 package service
 
 import (
+	"auth/config"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"strings"
@@ -12,7 +13,25 @@ type JwtCustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID, lifetimeMinutes int, secret string) (string, error) {
+type TokenService struct {
+	cfg *config.Config
+}
+
+func NewTokenService(cfg *config.Config) *TokenService {
+	return &TokenService{
+		cfg: cfg,
+	}
+}
+
+func (s *TokenService) GenerateAccessToken(userID int) (string, error) {
+	return s.generateToken(userID, s.cfg.AccessLifetimeMinutes, s.cfg.AccessSecret)
+}
+
+func (s *TokenService) GenerateRefreshToken(userID int) (string, error) {
+	return s.generateToken(userID, s.cfg.RefreshLifetimeMinutes, s.cfg.RefreshSecret)
+}
+
+func (s *TokenService) generateToken(userID, lifetimeMinutes int, secret string) (string, error) {
 	claims := &JwtCustomClaims{
 		userID,
 		jwt.RegisteredClaims{
@@ -24,7 +43,15 @@ func GenerateToken(userID, lifetimeMinutes int, secret string) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
-func ValidateToken(tokenString, secret string) (*JwtCustomClaims, error) {
+func (s *TokenService) ValidateAccessToken(tokenString string) (*JwtCustomClaims, error) {
+	return s.validateToken(tokenString, s.cfg.AccessSecret)
+}
+
+func (s *TokenService) ValidateRefreshToken(tokenString string) (*JwtCustomClaims, error) {
+	return s.validateToken(tokenString, s.cfg.RefreshSecret)
+}
+
+func (s *TokenService) validateToken(tokenString, secret string) (*JwtCustomClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &JwtCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
@@ -40,7 +67,7 @@ func ValidateToken(tokenString, secret string) (*JwtCustomClaims, error) {
 	return claims, nil
 }
 
-func GetTokenFromBearerString(bearerString string) string {
+func (s *TokenService) GetTokenFromBearerString(bearerString string) string {
 	if bearerString == "" {
 		return ""
 	}

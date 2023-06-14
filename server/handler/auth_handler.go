@@ -41,13 +41,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		accessString, err := service.GenerateToken(user.ID, h.cfg.AccessLifetimeMinutes, h.cfg.AccessSecret)
+		tokenService := service.NewTokenService(h.cfg)
+		accessString, err := tokenService.GenerateAccessToken(user.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		refreshString, err := service.GenerateToken(user.ID, h.cfg.RefreshLifetimeMinutes, h.cfg.RefreshSecret)
+		refreshString, err := tokenService.GenerateRefreshToken(user.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
