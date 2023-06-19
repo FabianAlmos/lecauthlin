@@ -3,6 +3,7 @@ package repository
 import (
 	"auth/model"
 	"errors"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,13 +21,13 @@ func NewUserRepository() IUserRepository {
 	p2, _ := bcrypt.GenerateFromPassword([]byte("22222222"), bcrypt.DefaultCost)
 
 	users := []*model.User{
-		&model.User{
+		{
 			ID:       1,
 			Email:    "alex@example.com",
 			Name:     "Alex",
 			Password: string(p1),
 		},
-		&model.User{
+		{
 			ID:       2,
 			Email:    "mary@example.com",
 			Name:     "Mary",

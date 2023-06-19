@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"auth/config"
 	"auth/repository"
 	"auth/response"
 	"auth/service"
@@ -10,26 +9,27 @@ import (
 )
 
 type UserHandler struct {
-	cfg *config.Config
+	userRepo     repository.IUserRepository
+	tokenService service.TokenService
 }
 
-func NewUserHandler(cfg *config.Config) *UserHandler {
+func NewUserHandler(userRepo repository.IUserRepository, tokenService *service.TokenService) *UserHandler {
 	return &UserHandler{
-		cfg: cfg,
+		userRepo:     userRepo,
+		tokenService: *tokenService,
 	}
 }
 
 func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		tokenService := service.NewTokenService(h.cfg)
-		claims, err := tokenService.ValidateAccessToken(tokenService.GetTokenFromBearerString(r.Header.Get("Authorization")))
+		claims, err := h.tokenService.ValidateAccessToken(h.tokenService.GetTokenFromBearerString(r.Header.Get("Authorization")))
 		if err != nil {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
 
-		user, err := repository.NewUserRepository().GetUserByID(claims.ID)
+		user, err := h.userRepo.GetUserByID(claims.ID)
 		if err != nil {
 			http.Error(w, "User does not exist", http.StatusBadRequest)
 			return

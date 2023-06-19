@@ -2,16 +2,13 @@ package service
 
 import (
 	"auth/config"
+	"auth/util"
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
 	"strings"
 	"time"
-)
 
-type JwtCustomClaims struct {
-	ID int `json:"id"`
-	jwt.RegisteredClaims
-}
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type TokenService struct {
 	cfg *config.Config
@@ -32,7 +29,7 @@ func (s *TokenService) GenerateRefreshToken(userID int) (string, error) {
 }
 
 func (s *TokenService) generateToken(userID, lifetimeMinutes int, secret string) (string, error) {
-	claims := &JwtCustomClaims{
+	claims := &util.JwtCustomClaims{
 		userID,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * time.Duration(lifetimeMinutes))),
@@ -43,23 +40,23 @@ func (s *TokenService) generateToken(userID, lifetimeMinutes int, secret string)
 	return token.SignedString([]byte(secret))
 }
 
-func (s *TokenService) ValidateAccessToken(tokenString string) (*JwtCustomClaims, error) {
+func (s *TokenService) ValidateAccessToken(tokenString string) (*util.JwtCustomClaims, error) {
 	return s.validateToken(tokenString, s.cfg.AccessSecret)
 }
 
-func (s *TokenService) ValidateRefreshToken(tokenString string) (*JwtCustomClaims, error) {
+func (s *TokenService) ValidateRefreshToken(tokenString string) (*util.JwtCustomClaims, error) {
 	return s.validateToken(tokenString, s.cfg.RefreshSecret)
 }
 
-func (s *TokenService) validateToken(tokenString, secret string) (*JwtCustomClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &JwtCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+func (s *TokenService) validateToken(tokenString, secret string) (*util.JwtCustomClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &util.JwtCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	claims, ok := token.Claims.(*JwtCustomClaims)
+	claims, ok := token.Claims.(*util.JwtCustomClaims)
 	if !ok || !token.Valid {
 		return nil, errors.New("failed to parse token claims")
 	}
